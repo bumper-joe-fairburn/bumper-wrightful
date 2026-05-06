@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { type Kysely, sql } from "kysely";
 import { requestInfo } from "rwsdk/worker";
+import { AnalyticsButtonGroup } from "@/app/components/analytics/button-group";
 import { FlakyTestRow } from "@/app/components/flaky-test-row";
 import { RunHistoryBranchFilter } from "@/app/components/run-history-branch-filter";
 import { ALL_BRANCHES } from "@/app/components/run-history-branch-filter.shared";
@@ -24,7 +25,7 @@ import {
 } from "@/app/components/ui/table";
 import { NotFoundPage } from "@/app/pages/not-found";
 import { getActiveProject } from "@/lib/active-project";
-import { cn } from "@/lib/cn";
+import { loadProjectBranches } from "@/lib/branches-query";
 
 const TOP_N = 50;
 const SPARKLINE_SIZE = 20;
@@ -73,7 +74,7 @@ export async function FlakyTestsPage(): Promise<React.ReactElement> {
   const branchFilter = branchAll ? null : branchParam;
 
   const aggregatesPromise = loadAggregates(project, range, branchFilter);
-  const branchesPromise = loadBranches(project);
+  const branchesPromise = loadProjectBranches(project);
 
   const rangeHref = (r: RangeKey): string => {
     const p = new URLSearchParams(url.searchParams);
@@ -97,22 +98,11 @@ export async function FlakyTestsPage(): Promise<React.ReactElement> {
           />
         </Suspense>
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-md border border-border bg-background p-0.5">
-            {RANGES.map((r) => (
-              <a
-                key={r}
-                href={rangeHref(r)}
-                className={cn(
-                  "px-3 py-1 text-xs font-mono rounded transition-colors",
-                  range === r
-                    ? "bg-muted text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {r}
-              </a>
-            ))}
-          </div>
+          <AnalyticsButtonGroup
+            options={RANGES}
+            value={range}
+            hrefFor={rangeHref}
+          />
         </div>
       </div>
 
@@ -183,21 +173,6 @@ async function loadAggregates(
   return { ranked, totalFlakyTests, truncated };
 }
 
-async function loadBranches(project: ActiveProject): Promise<string[]> {
-  const rows = await project.db
-    .selectFrom("runs")
-    .select("branch as value")
-    .distinct()
-    .where("projectId", "=", project.id)
-    .where("committed", "=", 1)
-    .where("branch", "is not", null)
-    .execute();
-  return rows
-    .map((r) => r.value)
-    .filter((v): v is string => !!v)
-    .sort();
-}
-
 async function FlakyHeaderLeft({
   aggregatesPromise,
   branchesPromise,
@@ -254,7 +229,7 @@ function FlakyHeaderLeftFallback({
 function FlakyTableHead(): React.ReactElement {
   return (
     <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-      <TableRow className="border-b border-border hover:bg-transparent dark:hover:bg-transparent">
+      <TableRow>
         <TableHead className="w-12 px-4 text-center font-mono text-[11px] uppercase tracking-wider">
           Rank
         </TableHead>

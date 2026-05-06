@@ -120,6 +120,7 @@ import { InsightsPage } from "@/app/pages/insights";
 import { RunDurationPage } from "@/app/pages/run-duration";
 import { SlowestTestsPage } from "@/app/pages/slowest-tests";
 import { SuiteSizePage } from "@/app/pages/suite-size";
+import { TestsPage } from "@/app/pages/tests";
 import { RunsListPage } from "@/app/pages/runs-list";
 import { RunDetailPage } from "@/app/pages/run-detail";
 import { TestDetailPage } from "@/app/pages/test-detail";
@@ -307,6 +308,7 @@ const app = defineApp([
       route("/t/:teamSlug", ProjectPickerPage),
       route("/t/:teamSlug/p/:projectSlug", RunsListPage),
       route("/t/:teamSlug/p/:projectSlug/flaky", FlakyTestsPage),
+      route("/t/:teamSlug/p/:projectSlug/tests", TestsPage),
       route("/t/:teamSlug/p/:projectSlug/insights", InsightsPage),
       route("/t/:teamSlug/p/:projectSlug/insights/suite-size", SuiteSizePage),
       route(

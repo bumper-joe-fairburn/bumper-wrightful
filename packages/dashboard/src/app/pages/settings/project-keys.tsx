@@ -252,7 +252,7 @@ export async function SettingsProjectKeysPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
+                <TableRow>
                   <TableHead className="px-5 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
                     Label
                   </TableHead>

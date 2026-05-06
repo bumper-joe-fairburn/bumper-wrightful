@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { NotFoundPage } from "@/app/pages/not-found";
 import { type ActiveProject, getActiveProject } from "@/lib/active-project";
+import { loadProjectBranches } from "@/lib/branches-query";
 import { cn } from "@/lib/cn";
 import { prUrl } from "@/lib/pr-url";
 import { param } from "@/lib/route-params";
@@ -124,7 +125,7 @@ export async function RunDetailPage(): Promise<React.ReactElement> {
     return seed;
   });
   const historyPromise = loadRunHistory(project, effectiveBranch);
-  const branchesPromise = loadBranches(project);
+  const branchesPromise = loadProjectBranches(project);
   const artifactActionsPromise: Promise<ArtifactActionsByTestId> =
     testsSeedPromise.then((seed) =>
       loadFailingArtifactActions(
@@ -365,21 +366,6 @@ async function loadRunHistory(
     q = q.where("branch", "=", effectiveBranch);
   }
   return q.orderBy("createdAt", "desc").limit(30).execute();
-}
-
-async function loadBranches(project: ActiveProject): Promise<string[]> {
-  const rows = await project.db
-    .selectFrom("runs")
-    .select("branch as value")
-    .distinct()
-    .where("projectId", "=", project.id)
-    .where("committed", "=", 1)
-    .where("branch", "is not", null)
-    .execute();
-  return rows
-    .map((r) => r.value)
-    .filter((v): v is string => !!v)
-    .sort();
 }
 
 async function RunHistorySection({

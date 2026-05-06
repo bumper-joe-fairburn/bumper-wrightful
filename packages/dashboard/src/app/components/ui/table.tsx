@@ -34,7 +34,10 @@ export function TableHeader({
 }: React.ComponentProps<"thead">): React.ReactElement {
   return (
     <thead
-      className={cn("[&_tr]:border-b", className)}
+      className={cn(
+        "[&_tr]:border-b [&_tr]:hover:bg-transparent dark:[&_tr]:hover:bg-transparent",
+        className,
+      )}
       data-slot="table-header"
       {...props}
     />

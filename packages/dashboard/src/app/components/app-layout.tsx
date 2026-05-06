@@ -32,7 +32,7 @@ type NavId = "runs" | "flaky" | "insights" | "tests";
 function deriveActiveNav(pathname: string): NavId {
   if (/\/flaky(\/|$)/.test(pathname)) return "flaky";
   if (/\/insights(\/|$)/.test(pathname)) return "insights";
-  if (/\/tests\//.test(pathname)) return "tests";
+  if (/\/tests(\/|$)/.test(pathname)) return "tests";
   return "runs";
 }
 
@@ -335,11 +335,10 @@ function AppSidebarContents({
           id: "insights",
         },
         {
-          href: "#",
+          href: `${base}/tests`,
           label: "Tests",
           icon: FlaskConical,
           id: "tests",
-          disabled: true,
         },
       ]
     : [];

@@ -11,6 +11,7 @@ import {
 } from "@/app/components/run-progress";
 import { RunTestsPopover } from "@/app/components/run-tests-popover";
 import { composeRunSummaryBatch, runRoomId } from "@/routes/api/progress";
+import { TablePaginationFooter } from "@/app/components/table-pagination-footer";
 import {
   Empty,
   EmptyContent,
@@ -18,15 +19,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/app/components/ui/empty";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/app/components/ui/pagination";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import {
   Table,
@@ -227,7 +219,7 @@ function RunsTableFallback(): React.ReactElement {
       <div className="flex-1 overflow-y-auto min-h-0">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-            <TableRow className="border-b border-border hover:bg-transparent dark:hover:bg-transparent">
+            <TableRow>
               <TableHead className="w-8 px-4" />
               <TableHead className="px-4 font-mono text-[11px] uppercase tracking-wider">
                 Commit
@@ -328,8 +320,6 @@ async function RunsTableSection({
     return qs ? `${url.pathname}?${qs}` : url.pathname;
   };
 
-  const pageWindow = buildPageWindow(currentPage, totalPages);
-
   return (
     <>
       {/* Table area */}
@@ -354,7 +344,7 @@ async function RunsTableSection({
         ) : (
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted/30 backdrop-blur-sm">
-              <TableRow className="border-b border-border hover:bg-transparent dark:hover:bg-transparent">
+              <TableRow>
                 <TableHead className="w-8 px-4" />
                 <TableHead className="px-4 font-mono text-[11px] uppercase tracking-wider">
                   Commit
@@ -596,76 +586,16 @@ async function RunsTableSection({
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-3 border-t border-border flex justify-between items-center gap-4 text-xs text-muted-foreground font-mono bg-background shrink-0">
-        <span>
-          {totalRuns === 0
-            ? "No runs"
-            : `Showing ${fromRow}–${toRow} of ${totalRuns} runs`}
-        </span>
-        {totalPages > 1 && (
-          <Pagination className="mx-0 w-auto justify-end">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href={currentPage > 1 ? pageHref(currentPage - 1) : undefined}
-                  aria-disabled={currentPage === 1}
-                  className={cn(
-                    currentPage === 1 && "pointer-events-none opacity-50",
-                  )}
-                />
-              </PaginationItem>
-              {pageWindow.map((entry, i) =>
-                entry === "ellipsis" ? (
-                  <PaginationItem key={`ellipsis-${i}`}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                ) : (
-                  <PaginationItem key={entry}>
-                    <PaginationLink
-                      href={pageHref(entry)}
-                      isActive={entry === currentPage}
-                    >
-                      {entry}
-                    </PaginationLink>
-                  </PaginationItem>
-                ),
-              )}
-              <PaginationItem>
-                <PaginationNext
-                  href={
-                    currentPage < totalPages
-                      ? pageHref(currentPage + 1)
-                      : undefined
-                  }
-                  aria-disabled={currentPage >= totalPages}
-                  className={cn(
-                    currentPage >= totalPages &&
-                      "pointer-events-none opacity-50",
-                  )}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
-      </div>
+      <TablePaginationFooter
+        fromRow={fromRow}
+        toRow={toRow}
+        totalCount={totalRuns}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemNoun="run"
+        pageHref={pageHref}
+        className="bg-background"
+      />
     </>
   );
-}
-
-function buildPageWindow(
-  current: number,
-  total: number,
-): Array<number | "ellipsis"> {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  const pages: Array<number | "ellipsis"> = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  if (start > 2) pages.push("ellipsis");
-  for (let p = start; p <= end; p++) pages.push(p);
-  if (end < total - 1) pages.push("ellipsis");
-  pages.push(total);
-  return pages;
 }

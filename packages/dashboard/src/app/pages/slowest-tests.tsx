@@ -14,6 +14,7 @@ import {
 import { InsightsTabs } from "@/app/components/analytics/insights-tabs";
 import { RunHistoryBranchFilter } from "@/app/components/run-history-branch-filter";
 import { ALL_BRANCHES } from "@/app/components/run-history-branch-filter.shared";
+import { TablePaginationFooter } from "@/app/components/table-pagination-footer";
 import { Card, CardPanel } from "@/app/components/ui/card";
 import {
   Empty,
@@ -21,15 +22,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/app/components/ui/empty";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/app/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -41,6 +33,7 @@ import {
 import { NotFoundPage } from "@/app/pages/not-found";
 import { getActiveProject } from "@/lib/active-project";
 import { makeRangeParser, rangeToSeconds } from "@/lib/analytics/range";
+import { loadProjectBranches } from "@/lib/branches-query";
 import { cn } from "@/lib/cn";
 import { STATUS_COLORS } from "@/lib/status";
 import type { TenantDatabase } from "@/tenant";
@@ -76,19 +69,7 @@ export async function SlowestTestsPage() {
   const tenantDb = project.db;
   const base = `/t/${project.teamSlug}/p/${project.slug}`;
 
-  // Distinct branch list for the filter UI. Same shape as flaky-tests.
-  const branchRows = await tenantDb
-    .selectFrom("runs")
-    .select("branch as value")
-    .distinct()
-    .where("projectId", "=", project.id)
-    .where("committed", "=", 1)
-    .where("branch", "is not", null)
-    .execute();
-  const branches = branchRows
-    .map((r) => r.value)
-    .filter((v): v is string => !!v)
-    .sort();
+  const branches = await loadProjectBranches(project);
 
   // Max durationMs over the window — used to pick a sensible histogram
   // bin width. Runs in parallel with the unique-test count query so the
@@ -283,8 +264,6 @@ export async function SlowestTestsPage() {
   const pageHref = (page: number): string =>
     hrefWith({ page: page === 1 ? null : String(page) });
 
-  const pageWindow = buildPageWindow(currentPage, totalPages);
-
   return (
     <>
       <InsightsTabs
@@ -387,7 +366,7 @@ export async function SlowestTestsPage() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-border hover:bg-transparent dark:hover:bg-transparent">
+                  <TableRow>
                     <TableHead className="w-12 px-4 text-center font-mono text-[11px] uppercase tracking-wider">
                       Status
                     </TableHead>
@@ -476,57 +455,16 @@ export async function SlowestTestsPage() {
             )}
           </CardPanel>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-4 border-t border-border/50 px-6 py-3 text-xs font-mono text-muted-foreground">
-              <span>
-                Showing {fromRow}–{toRow} of {totalUniqueTests.toLocaleString()}{" "}
-                tests
-              </span>
-              <Pagination className="mx-0 w-auto justify-end">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href={
-                        currentPage > 1 ? pageHref(currentPage - 1) : undefined
-                      }
-                      aria-disabled={currentPage === 1}
-                      className={cn(
-                        currentPage === 1 && "pointer-events-none opacity-50",
-                      )}
-                    />
-                  </PaginationItem>
-                  {pageWindow.map((entry, i) =>
-                    entry === "ellipsis" ? (
-                      <PaginationItem key={`ellipsis-${i}`}>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    ) : (
-                      <PaginationItem key={entry}>
-                        <PaginationLink
-                          href={pageHref(entry)}
-                          isActive={entry === currentPage}
-                        >
-                          {entry}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ),
-                  )}
-                  <PaginationItem>
-                    <PaginationNext
-                      href={
-                        currentPage < totalPages
-                          ? pageHref(currentPage + 1)
-                          : undefined
-                      }
-                      aria-disabled={currentPage >= totalPages}
-                      className={cn(
-                        currentPage >= totalPages &&
-                          "pointer-events-none opacity-50",
-                      )}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+            <TablePaginationFooter
+              fromRow={fromRow}
+              toRow={toRow}
+              totalCount={totalUniqueTests}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemNoun="test"
+              pageHref={pageHref}
+              className="border-border/50"
+            />
           )}
         </Card>
       </div>
@@ -716,19 +654,4 @@ function DurationSparkline({
       <path d={path} stroke={color} strokeWidth={1.25} fill="none" />
     </svg>
   );
-}
-
-function buildPageWindow(
-  current: number,
-  total: number,
-): Array<number | "ellipsis"> {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: Array<number | "ellipsis"> = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  if (start > 2) pages.push("ellipsis");
-  for (let p = start; p <= end; p++) pages.push(p);
-  if (end < total - 1) pages.push("ellipsis");
-  pages.push(total);
-  return pages;
 }

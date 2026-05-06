@@ -11,6 +11,7 @@ import {
 } from "@/app/components/ui/popover";
 import type { RunSummaryResponse } from "@/routes/api/run-summary";
 import type { TestResultSummaryResponse } from "@/routes/api/test-result-summary";
+import { cn } from "@/lib/cn";
 import { formatDuration, formatRelativeTime } from "@/lib/time-format";
 
 type HoverTarget =
@@ -323,7 +324,10 @@ function StatusChip({ status, label }: { status: string; label: string }) {
           : "bg-muted text-muted-foreground border-border";
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[11px] font-semibold ${tone}`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[11px] font-semibold",
+        tone,
+      )}
     >
       {label}
     </span>
