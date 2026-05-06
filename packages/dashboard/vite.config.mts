@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import { redwood } from "rwsdk/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import babel from "@rolldown/plugin-babel";
+import reactCompiler from "babel-plugin-react-compiler";
 
 export default defineConfig({
   // Pin to 5173 and fail fast if it's taken. WRIGHTFUL_PUBLIC_URL (used by
@@ -17,6 +19,10 @@ export default defineConfig({
       viteEnvironment: { name: "worker" },
     }),
     redwood(),
+    babel({
+      presets: ["@babel/preset-typescript"],
+      plugins: [reactCompiler],
+    }),
     tailwindcss(),
   ],
   // Pre-bundle deps reachable only through `"use client"` islands
