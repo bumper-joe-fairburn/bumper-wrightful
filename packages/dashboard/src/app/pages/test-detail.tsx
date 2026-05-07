@@ -399,7 +399,7 @@ export async function TestDetailPage() {
   })();
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       <div className="border-b border-border px-6 py-4 shrink-0">
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
           <a
@@ -506,7 +506,7 @@ export async function TestDetailPage() {
               : null,
         }));
         return (
-          <div className="flex-1 min-h-0 flex flex-row gap-0">
+          <div className="flex flex-row gap-0">
             <section className="flex-[3] min-w-0 flex flex-col border-r border-border bg-background">
               <header className="shrink-0 bg-muted/20">
                 <div className="flex items-center justify-between px-5 h-12 border-b border-border">
@@ -542,7 +542,7 @@ export async function TestDetailPage() {
                   </div>
                 ) : null}
               </header>
-              <div className="flex-1 min-h-0 overflow-auto">
+              <div>
                 {allAttempts.map((attempt) => {
                   const view = resolveAttemptView(attempt);
                   return (
@@ -571,7 +571,7 @@ export async function TestDetailPage() {
                 })}
               </div>
             </section>
-            <aside className="w-[320px] shrink-0 overflow-y-auto bg-muted/10">
+            <aside className="w-[320px] shrink-0 bg-muted/10">
               {allAttempts.map((attempt) => {
                 const group = artifactsByAttempt.get(attempt) ?? [];
                 const copyPromptRaw = group.find((a) => a.type === "other");
